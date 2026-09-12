@@ -1,0 +1,26 @@
+# Deploy this Blueprint from the repository containing PaperScan.
+# The Render API key belongs to deployment tooling, never to this static app.
+services:
+  - type: web
+    name: paperscan-studio
+    runtime: static
+    buildCommand: corepack pnpm install --frozen-lockfile && corepack pnpm build
+    staticPublishPath: ./out
+    autoDeployTrigger: off
+    envVars:
+      - key: NODE_VERSION
+        value: "24"
+      - key: SKIP_INSTALL_DEPS
+        value: "true"
+      - key: NEXT_TELEMETRY_DISABLED
+        value: "1"
+    headers:
+      # Workers and OCR assets have stable URLs. Revalidate network responses;
+      # the versioned service worker supplies the complete offline snapshot.
+      - path: /*
+        name: Cache-Control
+        value: no-cache
+      - path: /sw.js
+        name: Service-Worker-Allowed
+        value: /
+    # No catch-all rewrite: missing JS/WASM must return a real 404.
